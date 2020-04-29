@@ -10,8 +10,8 @@
 
 import numpy as np
 from math import sin, cos
-import robot.transforms as tr
-from robot.util import *
+import robopy.robot.transforms as tr
+#from util import *
 
 class Link:
     """

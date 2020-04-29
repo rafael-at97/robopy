@@ -6,7 +6,7 @@ import numpy as np
 # from scipy.linalg import expm
 # from . import check_args
 # from ..tests import test_transforms
-from robot.util import ishomog
+from robopy.robot.util import ishomog
 # import unittest
 # import vtk
 

@@ -1,7 +1,5 @@
 ###
-#   Based on Robotics Toolbox for Matlab created by Peter Corke and forked
-#       from the repository created by Aditya Dua to continue the port of
-#       the toolbox for python
+#   Based on Robotics Toolbox for Matlab created by Peter Corke
 #
 #   Author: Rafael Torres
 #

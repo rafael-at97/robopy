@@ -9,7 +9,7 @@
 import numpy as np
 from math import sin, cos
 import robopy.robot.transforms as tr
-#from util import *
+import robopy.robot.plot as robotplt
 
 class Link:
     """
@@ -472,7 +472,7 @@ class SerialLink:
         # Set debug to
         #   0 -> No messages
         #   1 -> Display results of outwards and inwards recursion
-        debug = 1
+        debug = 0
 
         # Initial setup
         z = np.array([0, 0, 1]) # Initial 'Z' points "up", 'X' and 'Y' constitute top plane
@@ -579,3 +579,49 @@ class SerialLink:
             print()
 
         return tau
+
+    def fkine(self, q):
+        """
+        Forward Kinematics of manipulator
+        
+        :param q: The joint angles/configuration of the robot.
+        
+        :return: Pose of tool, shape (4, 4);  
+        :return: Array with shape (len(q), 4, 4), containing 
+                 pose of joints.
+
+        TODO: Options parameter to treat q array as degrees, not radians 
+              Assertions on 'q' size and number of links
+              Trajectories
+        """        
+
+        pose_all = np.zeros((len(q), 4, 4))
+
+        t = self.base
+
+        for i in range(len(q)):
+            t = np.matmul( t, self.links[i].Tm(q[i]) )
+
+            pose_all[i] = t
+
+        t = np.matmul( t, self.tool )
+
+        return t, pose_all
+
+    # Define the initial value for plotter
+    plotter = None
+    def plot(self, q, optimize=False):
+        """
+        Graphical display of manipulator
+        
+        :param q: The joint angles/configuration of the robot.
+        """
+
+        # Initialization
+        if self.plotter is None:
+            self.plotter = robotplt.Plotter(optimize)
+
+        # Calculate forward kinematics
+        t, pose_all = self.fkine(q)
+
+        self.plotter.plot(self.base, pose_all, t)

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import signal
 
 class Plotter:
-    def __init__(self, optimize=False):
+    def __init__(self, optimize=False, show_trajectory=True):
         # Init empty figure
         self.fig = plt.figure()
         self.ax = self.fig.add_subplot(111, projection='3d')
@@ -23,6 +23,8 @@ class Plotter:
         self.tool_frame = []
 
         self.optimize = optimize
+        self.show_trajectory = show_trajectory
+        self.limit_trajectory = 0
 
         self.quiver_len = 0.15
         self.colors = ["red", "green", "blue"]
@@ -93,6 +95,15 @@ class Plotter:
                                       pose_all[:, 2, 3], # zs
                                       c="gray", marker="s", s=50) 
 
+        # Start trajectory
+        if self.show_trajectory:
+            self.trajectory_points = np.zeros([3, 1])
+
+            self.trajectory_points[:, 0] = t[:3, 3]
+
+            self.trajectory, = self.ax.plot(self.trajectory_points[0, :], self.trajectory_points[1, :], self.trajectory_points[2, :],
+                                           linewidth=1, color="darkgray")
+
         if not self.optimize or self.optimize == "O0":
             # Plot joint frames
             for i in range(len(pose_all)):
@@ -144,6 +155,21 @@ class Plotter:
         self.links.set_ydata(pos[1, :])
         self.links.set_3d_properties(pos[2, :])
 
+        # Uupdate trajectory
+        if self.show_trajectory:
+            dist = t[:3, 3] - self.trajectory_points[:, -1]
+            dist = np.dot(dist, dist)
+            if(dist > 1e-3):
+                self.trajectory_points = np.concatenate((self.trajectory_points, t[:3, 3].reshape(3, 1)), axis=1)
+
+                # Cut excess points
+                if((self.limit_trajectory > 0) and (len(self.trajectory_points) > self.limit_trajectory)):
+                    self.trajectory_points = self.trajectory_points[(len(self.trajectory_points)-self.limit_trajectory):-1]
+
+                self.trajectory.set_xdata(self.trajectory_points[0, :])
+                self.trajectory.set_ydata(self.trajectory_points[1, :])
+                self.trajectory.set_3d_properties(self.trajectory_points[2, :])
+
         # Update joints positions
         self.joints._offsets3d = (pose_all[:, 0, 3], # xs
                                   pose_all[:, 1, 3], # ys
@@ -166,8 +192,8 @@ class Plotter:
                                                              frame[2][j]+pose_all[i][2][3]]]])
 
         frame = np.matmul(t[:3, :3], [[self.quiver_len, 0,   0], 
-                                [0,   self.quiver_len, 0], 
-                                [0,   0,   self.quiver_len]])
+                                      [0,   self.quiver_len, 0], 
+                                      [0,   0,   self.quiver_len]])
 
         # Update tool frame
         for i in range(3):
